@@ -1,0 +1,35 @@
+name: Gunluk Bulten Ajani
+
+# Ajanın ne zaman tetikleneceğini belirliyoruz
+on:
+  schedule:
+    # Cron formatı: Dakika Saat Gün Ay HaftanınGünü (UTC saat dilimine göre)
+    # Türkiye saati UTC+3'tür. Türkiye'de sabah 09:00 olması için buraya UTC 06:00 yazıyoruz.
+    - cron: '0 6 * * *'
+  workflow_dispatch: # Bu satır, GitHub sitesi üzerinden butona basarak manuel test etmeni sağlar
+
+jobs:
+  build:
+    runs-on: ubuntu-latest # GitHub'ın bize vereceği ücretsiz sunucu işletim sistemi
+
+    steps:
+      - name: Kodu GitHub'dan Sunucuya Çek
+        uses: actions/checkout@v4
+
+      - name: Python Ortamını Kur
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12' # Modern bir Python sürümü
+
+      - name: Kütüphaneleri Yükle (requirements.txt okutulur)
+        run: pip install -r requirements.txt
+
+      - name: Ajanı Çalıştır
+        # Şifrelerimizi GitHub deposunun ayarlarından (Secrets) güvenli bir şekilde çekip koda veriyoruz
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          EMAIL_SENDER: ${{ secrets.EMAIL_SENDER }}
+          EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
+          EMAIL_RECEIVER: ${{ secrets.EMAIL_RECEIVER }}
+        run: python main.py
+        
