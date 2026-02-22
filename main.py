@@ -59,15 +59,23 @@ class DailyBriefingAgent:
             return {"Gram_Altin": "Veri Yok", "USD_TRY": "Veri Yok", "EUR_TRY": "Veri Yok", "TRY_AFN": "Veri Yok"}
 
     def fetch_weather(self) -> str:
-        """Elazığ için hava durumunu çeker."""
-        logger.info("Elazığ hava durumu çekiliyor...")
+        """Elazığ için hava durumunu Open-Meteo API'sinden çeker (Çok daha stabil)."""
+        logger.info("Elazığ hava durumu çekiliyor (Open-Meteo)...")
         try:
-            # Ücretsiz ve API Key gerektirmeyen wttr.in servisi
-            url = "https://wttr.in/Elazığ?format=%C+%t"
-            response = requests.get(url, timeout=5)
+            # Elazığ'ın koordinatları (Enlem: 38.6743, Boylam: 39.2232)
+            url = "https://api.open-meteo.com/v1/forecast?latitude=38.6743&longitude=39.2232&current_weather=true"
+            response = requests.get(url, timeout=10)
+            
             if response.status_code == 200:
-                return response.text.strip()
-            return "Hava durumu verisi alınamadı."
+                data = response.json()
+                current = data.get("current_weather", {})
+                temp = current.get("temperature", "Bilinmiyor")
+                wind = current.get("windspeed", "Bilinmiyor")
+                
+                # Sadece sıcaklık ve rüzgarı metin olarak döndürüyoruz
+                return f"Sıcaklık {temp}°C, Rüzgar Hızı: {wind} km/s"
+            
+            return "API yanıt vermedi."
         except Exception as e:
             logger.error(f"Hava durumu hatası: {e}")
             return "Hava durumu servisine ulaşılamadı."
